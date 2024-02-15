@@ -1,6 +1,8 @@
 package main
 
 import (
+	"encoding/json"
+	// "encoding/hex"
 	"context"
 	"fmt"
 
@@ -10,11 +12,15 @@ import (
 	. "github.com/streamingfast/cli"
 	"github.com/streamingfast/logging"
 	sink "github.com/streamingfast/substreams-sink"
-	pbchanges "github.com/streamingfast/substreams-sink-database-changes/pb/sf/substreams/sink/database/v1"
+	// pbchanges "github.com/streamingfast/substreams-sink-database-changes/pb/sf/substreams/sink/database/v1"
+	// pbtokentransfer "github.com/streamingfast/substreams-sink/examples/advanced/eosio.token/proto/v1"
+	pbsetabi "github.com/streamingfast/substreams-sink/examples/advanced/setabi/proto/v1"
 	pbsubstreamsrpc "github.com/streamingfast/substreams/pb/sf/substreams/rpc/v2"
 )
 
-var expectedOutputModuleType = string(new(pbchanges.DatabaseChanges).ProtoReflect().Descriptor().FullName())
+// var expectedOutputModuleType = string(new(pbtokentransfer.TransferEvents).ProtoReflect().Descriptor().FullName())
+var expectedOutputModuleType = string(new(pbsetabi.SetABIEvents).ProtoReflect().Descriptor().FullName())
+
 
 var zlog, tracer = logging.RootLogger("project", "github.com/change_to_org/change_to_project")
 
@@ -61,7 +67,7 @@ func sinkRunE(cmd *cobra.Command, args []string) error {
 		manifestPath,
 		outputModuleName,
 		// This is the block range, in our case defined as Substreams module's start block and up forever
-		":",
+		"11:20",
 		zlog,
 		tracer,
 	)
@@ -87,12 +93,39 @@ func sinkRunE(cmd *cobra.Command, args []string) error {
 func handleBlockScopedData(ctx context.Context, data *pbsubstreamsrpc.BlockScopedData, isLive *bool, cursor *sink.Cursor) error {
 	_ = ctx
 
-	changes := &pbchanges.DatabaseChanges{}
+	// changes := &pbchanges.DatabaseChanges{}
+	// changes := &pbtokentransfer.TransferEvents{}
+	changes := &pbsetabi.SetABIEvents{}
+
 	if err := data.Output.MapOutput.UnmarshalTo(changes); err != nil {
 		return fmt.Errorf("unable to unmarshal database changes: %w", err)
 	}
 
-	fmt.Printf("Block #%d (%s) data received with %d changes\n", data.Clock.Number, data.Clock.Id, len(changes.TableChanges))
+	fmt.Printf("Block #%d (%s) data received with %d changes\n", data.Clock.Number, data.Clock.Id, len(changes.Items))
+
+	// // uncomment to see the decoded ascii string
+    // for i,_ := range changes.Items {    
+	//     // convert abi field from hex econding string to ascii encoding string
+	//     bytes, err := hex.DecodeString(changes.Items[i].Abi)
+
+	//     if err != nil {
+	// 		fmt.Errorf("Error decoding hex to ascii string: %v", err)
+	// 	}
+
+	// 	// Convert bytes to ASCII string
+	// 	abiAsciiString := string(bytes)
+
+	//     // fmt.Println(abiAsciiString); 
+	//     changes.Items[i].Abi = abiAsciiString;
+    // }
+
+	jsonData, err := json.Marshal(changes)
+	    if err != nil {
+        fmt.Errorf("Error marshaling to JSON: %v", err)
+    }
+
+    // Convert the JSON bytes to a string and print
+    fmt.Println(string(jsonData))
 
 	// Once you have processed the block, you **must** persist the cursor, persistence
 	// can take differnet form. For example, you can save it to a file, or to a database.

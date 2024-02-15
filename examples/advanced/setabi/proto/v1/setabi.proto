@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+package antelope.setabi.v1;
+option go_package = "github.com/streamingfast/substreams-sink/examples/advanced/setabi/proto/v1;pbsetabi";
+
+message SetABIEvents {
+    repeated SetABIEvent items = 1;
+}
+
+message SetABIEvent {
+    // transaction
+    string trx_id = 1;
+    uint32 action_ordinal = 2;
+
+    // contract & action
+    string contract = 3;
+    string action = 4;
+
+    // data payload
+    string account = 5;
+    string abi = 6;
+}
