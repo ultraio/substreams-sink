@@ -2,7 +2,6 @@ package sink
 
 import (
 	"fmt"
-	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -140,6 +139,7 @@ func NewFromViper(
 	cmd *cobra.Command,
 	expectedOutputModuleType string,
 	endpoint, manifestPath, outputModuleName, blockRange string,
+	authenticator *subsAuthenticator,
 	zlog *zap.Logger,
 	tracer logging.Tracer,
 	opts ...Option,
@@ -177,7 +177,6 @@ func NewFromViper(
 		return nil, fmt.Errorf("reading manifest: %w", err)
 	}
 
-	apiToken := readAPIToken()
 	zlog.Debug("resolved block range", zap.Stringer("range", resolvedBlockRange))
 
 	if finalBlocksOnly {
@@ -185,10 +184,12 @@ func NewFromViper(
 		undoBufferSize = 0
 	}
 
+	authToken, authType := authenticator.GetAuth()
+
 	clientConfig := client.NewSubstreamsClientConfig(
 		endpoint,
-		apiToken,
-		client.JWT,
+		authToken,
+		authType,
 		sflags.MustGetBool(cmd, FlagInsecure),
 		sflags.MustGetBool(cmd, FlagPlaintext),
 	)
@@ -389,15 +390,6 @@ func resolveBlockNumber(value int64, defaultIfNegative int64, relative bool, aga
 		return value
 	}
 	return int64(against) + value
-}
-
-func readAPIToken() string {
-	apiToken := os.Getenv("SUBSTREAMS_API_TOKEN")
-	if apiToken != "" {
-		return apiToken
-	}
-
-	return os.Getenv("SF_API_TOKEN")
 }
 
 func every[E any](s []E, test func(e E) bool) bool {

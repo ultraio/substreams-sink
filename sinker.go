@@ -224,13 +224,15 @@ func (s *Sinker) run(ctx context.Context, cursor *Cursor, handler SinkerHandler)
 	activeCursor = cursor
 
 	ssClient, closeFunc, callOpts, headers, err := client.NewSubstreamsClient(s.clientConfig)
+
 	if err != nil {
 		return activeCursor, fmt.Errorf("new substreams client: %w", err)
 	}
 	s.OnTerminating(func(_ error) { closeFunc() })
 
 	var headersArray []string
-	if len(s.extraHeaders) > 0 {
+
+	if len(s.extraHeaders) > 0 || headers != nil {
 		if headers == nil {
 			headers = make(client.Headers)
 		}
@@ -241,6 +243,10 @@ func (s *Sinker) run(ctx context.Context, cursor *Cursor, handler SinkerHandler)
 
 		headersArray = make([]string, 0, len(headers)*2)
 		for k, v := range parseHeaders(s.extraHeaders) {
+			headersArray = append(headersArray, k, v)
+		}
+
+		for k, v := range headers {
 			headersArray = append(headersArray, k, v)
 		}
 	}
