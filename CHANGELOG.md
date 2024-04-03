@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
-* Enable multiple substreams authentication methods (API key, JWT), using subsAuthenticator. 
+* Enable multiple substreams authentication methods (API key, JWT), using flags `--api-key-envvar` and `--api-token-envvar`. 
 
 ## v0.3.4
 

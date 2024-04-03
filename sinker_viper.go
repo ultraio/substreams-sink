@@ -30,6 +30,8 @@ const (
 	FlagIrreversibleOnly      = "irreversible-only"
 	FlagSkipPackageValidation = "skip-package-validation"
 	FlagExtraHeaders          = "header"
+	FlagAPIKeyEnvvar          = "api-key-envvar"
+	FlagAPITokenEnvvar        = "api-token-envvar"
 )
 
 func FlagIgnore(in ...string) FlagIgnored {
@@ -62,6 +64,8 @@ func (i flagIgnoredList) IsIgnored(flag string) bool {
 //	Flag `--infinite-retry` (defaults `false`)
 //	Flag `--skip-package-validation` (defaults `false`)
 //	Flag `--header (-H)` (defaults `[]`)
+//	Flag `--api-key-envvar` (default `SUBSTREAMS_API_KEY`)
+//	Flag `--api-token-envvar` (default `SUBSTREAMS_API_TOKEN`)
 //
 // The `ignore` field can be used to multiple times to avoid adding the specified
 // `flags` to the the set. This can be used for example to avoid adding `--final-blocks-only`
@@ -120,6 +124,15 @@ func AddFlagsToSet(flags *pflag.FlagSet, ignore ...FlagIgnored) {
 	if flagIncluded(FlagExtraHeaders) {
 		flags.StringArrayP(FlagExtraHeaders, "H", nil, "Additional headers to be sent in the substreams request")
 	}
+
+	if flagIncluded(FlagAPIKeyEnvvar) {
+		flags.StringP(FlagAPIKeyEnvvar, "", "SUBSTREAMS_API_KEY", "Name of environment variable containing substreams API Key")
+	}
+
+	if flagIncluded(FlagAPITokenEnvvar) {
+		flags.StringP(FlagAPITokenEnvvar, "", "SUBSTREAMS_API_TOKEN", "Name of environment variable containing substreams Authentication token (JWT)")
+	}
+
 }
 
 // NewFromViper constructs a new Sinker instance from a fixed set of "known" flags.
@@ -139,7 +152,6 @@ func NewFromViper(
 	cmd *cobra.Command,
 	expectedOutputModuleType string,
 	endpoint, manifestPath, outputModuleName, blockRange string,
-	authenticator *subsAuthenticator,
 	zlog *zap.Logger,
 	tracer logging.Tracer,
 	opts ...Option,
@@ -184,7 +196,8 @@ func NewFromViper(
 		undoBufferSize = 0
 	}
 
-	authToken, authType := authenticator.GetAuth()
+	auth := newAuthenticator(sflags.MustGetString(cmd, FlagAPIKeyEnvvar), sflags.MustGetString(cmd, FlagAPITokenEnvvar))
+	authToken, authType := auth.GetTokenAndType()
 
 	clientConfig := client.NewSubstreamsClientConfig(
 		endpoint,
