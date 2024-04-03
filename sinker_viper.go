@@ -2,7 +2,6 @@ package sink
 
 import (
 	"fmt"
-	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -31,6 +30,8 @@ const (
 	FlagIrreversibleOnly      = "irreversible-only"
 	FlagSkipPackageValidation = "skip-package-validation"
 	FlagExtraHeaders          = "header"
+	FlagAPIKeyEnvvar          = "api-key-envvar"
+	FlagAPITokenEnvvar        = "api-token-envvar"
 )
 
 func FlagIgnore(in ...string) FlagIgnored {
@@ -63,6 +64,8 @@ func (i flagIgnoredList) IsIgnored(flag string) bool {
 //	Flag `--infinite-retry` (defaults `false`)
 //	Flag `--skip-package-validation` (defaults `false`)
 //	Flag `--header (-H)` (defaults `[]`)
+//	Flag `--api-key-envvar` (default `SUBSTREAMS_API_KEY`)
+//	Flag `--api-token-envvar` (default `SUBSTREAMS_API_TOKEN`)
 //
 // The `ignore` field can be used to multiple times to avoid adding the specified
 // `flags` to the the set. This can be used for example to avoid adding `--final-blocks-only`
@@ -121,6 +124,15 @@ func AddFlagsToSet(flags *pflag.FlagSet, ignore ...FlagIgnored) {
 	if flagIncluded(FlagExtraHeaders) {
 		flags.StringArrayP(FlagExtraHeaders, "H", nil, "Additional headers to be sent in the substreams request")
 	}
+
+	if flagIncluded(FlagAPIKeyEnvvar) {
+		flags.StringP(FlagAPIKeyEnvvar, "", "SUBSTREAMS_API_KEY", "Name of environment variable containing substreams API Key")
+	}
+
+	if flagIncluded(FlagAPITokenEnvvar) {
+		flags.StringP(FlagAPITokenEnvvar, "", "SUBSTREAMS_API_TOKEN", "Name of environment variable containing substreams Authentication token (JWT)")
+	}
+
 }
 
 // NewFromViper constructs a new Sinker instance from a fixed set of "known" flags.
@@ -177,7 +189,6 @@ func NewFromViper(
 		return nil, fmt.Errorf("reading manifest: %w", err)
 	}
 
-	apiToken := readAPIToken()
 	zlog.Debug("resolved block range", zap.Stringer("range", resolvedBlockRange))
 
 	if finalBlocksOnly {
@@ -185,10 +196,13 @@ func NewFromViper(
 		undoBufferSize = 0
 	}
 
+	auth := newAuthenticator(sflags.MustGetString(cmd, FlagAPIKeyEnvvar), sflags.MustGetString(cmd, FlagAPITokenEnvvar))
+	authToken, authType := auth.GetTokenAndType()
+
 	clientConfig := client.NewSubstreamsClientConfig(
 		endpoint,
-		apiToken,
-		client.JWT,
+		authToken,
+		authType,
 		sflags.MustGetBool(cmd, FlagInsecure),
 		sflags.MustGetBool(cmd, FlagPlaintext),
 	)
@@ -389,15 +403,6 @@ func resolveBlockNumber(value int64, defaultIfNegative int64, relative bool, aga
 		return value
 	}
 	return int64(against) + value
-}
-
-func readAPIToken() string {
-	apiToken := os.Getenv("SUBSTREAMS_API_TOKEN")
-	if apiToken != "" {
-		return apiToken
-	}
-
-	return os.Getenv("SF_API_TOKEN")
 }
 
 func every[E any](s []E, test func(e E) bool) bool {
