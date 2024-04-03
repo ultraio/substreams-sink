@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 
 * Enable multiple substreams authentication methods (API key, JWT), using flags `--api-key-envvar` and `--api-token-envvar`. 
+* Deprecates the use of `SF_API_TOKEN` environment variable, now use default `SUBSTREAMS_API_TOKEN` or set your own using `--api-token-envvar`
 
 ## v0.3.4
 
