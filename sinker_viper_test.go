@@ -32,6 +32,8 @@ func TestAddFlagsToSet(t *testing.T) {
 				FlagIrreversibleOnly,
 				FlagSkipPackageValidation,
 				FlagExtraHeaders,
+				FlagAPIKeyEnvvar,
+				FlagAPITokenEnvvar,
 			},
 		},
 		{
@@ -49,6 +51,8 @@ func TestAddFlagsToSet(t *testing.T) {
 				FlagIrreversibleOnly,
 				FlagSkipPackageValidation,
 				FlagExtraHeaders,
+				FlagAPIKeyEnvvar,
+				FlagAPITokenEnvvar,
 			},
 		},
 		{
@@ -65,6 +69,8 @@ func TestAddFlagsToSet(t *testing.T) {
 				FlagIrreversibleOnly,
 				FlagSkipPackageValidation,
 				FlagExtraHeaders,
+				FlagAPIKeyEnvvar,
+				FlagAPITokenEnvvar,
 			},
 		},
 		{
@@ -81,6 +87,8 @@ func TestAddFlagsToSet(t *testing.T) {
 				FlagIrreversibleOnly,
 				FlagSkipPackageValidation,
 				FlagExtraHeaders,
+				FlagAPIKeyEnvvar,
+				FlagAPITokenEnvvar,
 			},
 		},
 		{
@@ -96,6 +104,8 @@ func TestAddFlagsToSet(t *testing.T) {
 				FlagIrreversibleOnly,
 				FlagSkipPackageValidation,
 				FlagExtraHeaders,
+				FlagAPIKeyEnvvar,
+				FlagAPITokenEnvvar,
 			},
 		},
 		{
@@ -112,6 +122,8 @@ func TestAddFlagsToSet(t *testing.T) {
 				FlagInfiniteRetry,
 				FlagSkipPackageValidation,
 				FlagExtraHeaders,
+				FlagAPIKeyEnvvar,
+				FlagAPITokenEnvvar,
 			},
 		},
 		{
@@ -129,6 +141,8 @@ func TestAddFlagsToSet(t *testing.T) {
 				FlagInfiniteRetry,
 				FlagSkipPackageValidation,
 				FlagExtraHeaders,
+				FlagAPIKeyEnvvar,
+				FlagAPITokenEnvvar,
 			},
 		},
 	}

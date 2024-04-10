@@ -117,7 +117,7 @@ type substramsClientStringer client.SubstreamsClientConfig
 func (s *substramsClientStringer) String() string {
 	config := (*client.SubstreamsClientConfig)(s)
 
-	return fmt.Sprintf("%s (insecure: %t, plaintext: %t, JWT present: %t)", config.Endpoint(), config.Insecure(), config.PlainText(), config.JWT() != "")
+	return fmt.Sprintf("%s (insecure: %t, plaintext: %t, JWT present: %t)", config.Endpoint(), config.Insecure(), config.PlainText(), config.AuthToken() != "")
 }
 
 func (s *Sinker) BlockRange() *bstream.Range {
@@ -170,7 +170,7 @@ func (s *Sinker) EndpointConfig() (endpoint string, plaintext bool, insecure boo
 // ApiToken returns the currently defined ApiToken sets on this sinker instance, ""
 // is no api token was configured
 func (s *Sinker) ApiToken() string {
-	return s.clientConfig.JWT()
+	return s.clientConfig.AuthToken()
 }
 
 func (s *Sinker) Run(ctx context.Context, cursor *Cursor, handler SinkerHandler) {
@@ -223,18 +223,30 @@ func (s *Sinker) Run(ctx context.Context, cursor *Cursor, handler SinkerHandler)
 func (s *Sinker) run(ctx context.Context, cursor *Cursor, handler SinkerHandler) (activeCursor *Cursor, err error) {
 	activeCursor = cursor
 
-	ssClient, closeFunc, callOpts, err := client.NewSubstreamsClient(s.clientConfig)
+	ssClient, closeFunc, callOpts, headers, err := client.NewSubstreamsClient(s.clientConfig)
+
 	if err != nil {
 		return activeCursor, fmt.Errorf("new substreams client: %w", err)
 	}
 	s.OnTerminating(func(_ error) { closeFunc() })
 
 	var headersArray []string
-	if len(s.extraHeaders) > 0 {
-		headers := parseHeaders(s.extraHeaders)
-		headersArray = make([]string, 0, len(headers)*2)
+
+	if len(s.extraHeaders) > 0 || headers != nil {
+		if headers == nil {
+			headers = make(client.Headers)
+		}
 
 		for k, v := range parseHeaders(s.extraHeaders) {
+			headers[k] = v
+		}
+
+		headersArray = make([]string, 0, len(headers)*2)
+		for k, v := range parseHeaders(s.extraHeaders) {
+			headersArray = append(headersArray, k, v)
+		}
+
+		for k, v := range headers {
 			headersArray = append(headersArray, k, v)
 		}
 	}
@@ -285,6 +297,11 @@ func (s *Sinker) run(ctx context.Context, cursor *Cursor, handler SinkerHandler)
 				// number that is no in the chain meaning we will receive `io.EOF` but the last seen block before
 				// it is not our block number, we must have confidence in the Substreams provider to respect the
 				// protocol
+				return activeCursor, nil
+			}
+
+			if ctxErr := ctx.Err(); errors.Is(ctxErr, context.Canceled) {
+				s.logger.Debug("substreams encountered an error but we are currently terminating, ignoring it", zap.Error(err))
 				return activeCursor, nil
 			}
 

@@ -38,7 +38,7 @@ func main() {
 
 	pkg, outputModule, outputHashModule, blockRange, err := sink.ReadManifestAndModuleAndBlockRange(
 		manifestPath,
-		// Equivalent to the "network" parameter of the CLI. Specifies the network to use 
+		// Equivalent to the "network" parameter of the CLI. Specifies the network to use
 		// for params and initialBlocks, overriding the "network" field in the Substreams package.
 		"mainnet",
 		params,
@@ -62,7 +62,7 @@ func main() {
 		outputModule,
 		outputHashModule,
 		// Deals with endpoint, API token and plaintext/TLS configuration
-		client.NewSubstreamsClientConfig(endpoint, os.Getenv("SUBSTREAMS_API_TOKEN"), false, false),
+		client.NewSubstreamsClientConfig(endpoint, os.Getenv("SUBSTREAMS_API_TOKEN"), client.JWT, false, false),
 		zlog,
 		tracer,
 		sink.WithBlockRange(blockRange),

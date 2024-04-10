@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Unreleased
+
+* Enable multiple substreams authentication methods (API key, JWT), using flags `--api-key-envvar` and `--api-token-envvar`. 
+* Deprecates the use of `SF_API_TOKEN` environment variable, now use default `SUBSTREAMS_API_TOKEN` or set your own using `--api-token-envvar`
+
+## v0.3.4
+
+* Fixed spurious error reporting when the sinker is terminating or has been canceled.
+
+* Updated `substreams` dependency to latest version `v1.3.7`.
+
 ## v0.3.3
 
 * Improved `substreams stream stats` log line but now using `substreams_sink_progress_message_total_processed_blocks` for `progress_block_rate` replacing the `progress_msg_rate` which wasn't meaningful anymore (and broken because the metric was never updated).
