@@ -73,6 +73,10 @@ func New(
 	tracer logging.Tracer,
 	opts ...Option,
 ) (*Sinker, error) {
+
+	bo := backoff.NewExponentialBackOff()
+	bo.MaxElapsedTime = 0
+
 	s := &Sinker{
 		Shutter:          shutter.New(),
 		clientConfig:     clientConfig,
@@ -80,7 +84,7 @@ func New(
 		outputModule:     outputModule,
 		outputModuleHash: hex.EncodeToString(hash),
 		mode:             mode,
-		backOff:          backoff.NewExponentialBackOff(),
+		backOff:          bo,
 		stats:            newStats(logger),
 		logger:           logger,
 		tracer:           tracer,
