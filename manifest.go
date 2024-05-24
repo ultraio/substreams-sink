@@ -71,8 +71,8 @@ func ReadManifestAndModule(
 	if err != nil {
 		return nil, nil, nil, fmt.Errorf("get output module %q: %w", resolvedOutputModuleName, err)
 	}
-	if module.GetKindMap() == nil {
-		return nil, nil, nil, fmt.Errorf("ouput module %q is *not* of  type 'Mapper'", resolvedOutputModuleName)
+	if module.GetKindStore() != nil {
+		return nil, nil, nil, fmt.Errorf("ouput module %q is of type 'Store'", resolvedOutputModuleName)
 	}
 
 	zlog.Info("validating output module type", zap.String("module_name", module.Name), zap.String("module_type", module.Output.Type))
